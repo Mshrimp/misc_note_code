@@ -86,14 +86,13 @@ ERR1:
 
 
 
-void llist_travel(LLIST *handle)
+void llist_travel(LLIST *handle, llist_op_t *op)
 {
 	struct node_t *tail = NULL;
 
 	for (tail = handle->head.next; tail != &handle->head; tail = tail->next)
 	{
-		printf("i = %d", *(int *)tail->data);
-	
+		op(tail->data);
 	}
 
 	return ;

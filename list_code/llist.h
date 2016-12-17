@@ -15,6 +15,10 @@
 									}										\
 								}while(0)									
 
+
+typedef void (llist_op_t)(void *);
+typedef int (llist_cmp_t)(void *, void *);
+
 struct node_t{
 	void *data;
 	struct node_t *next;
@@ -30,9 +34,15 @@ typedef struct llist_t{
 //有头 无序 循环 双向链表
 
 
-LLIST *llist_creat(int size);
+LLIST *llist_create(int size);
 
-void llist_travel(LLIST *handle);
+void llist_append(LLIST *handle, void *data);
+
+void llist_prepend(LLIST *handle, void *data);
+
+void llist_travel(LLIST *handle, llist_op_t *op);
+
+void llist_destory(LLIST *handle);
 
 
 
