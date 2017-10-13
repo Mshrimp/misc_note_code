@@ -39,6 +39,7 @@ int main(void)
 	printf("\n");
 
 	stack_travel(handle, print);
+	stack_destory(handle);
 
 	return 0;
 ERR1:

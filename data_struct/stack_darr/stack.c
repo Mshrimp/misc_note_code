@@ -17,13 +17,20 @@ STACK *stack_create(int data_size, int stack_max)
 	handle->data = malloc(data_size * stack_max);
 	ERRP(NULL == handle->data, stack_create handle->data malloc, goto ERR2);
 
+	handle->save = malloc(data_size);
+	ERRP(NULL == handle->save, stack_create handle->save malloc, goto ERR3);
+
 	handle->size = data_size;
 	handle->max = stack_max;
 	handle->top = 0;
 
 	return handle;
+ERR3:
+	free(handle->data);
+	handle->data = NULL;
 ERR2:
 	free(handle);
+	handle = NULL;
 ERR1:
 	return NULL;
 }
@@ -102,23 +109,16 @@ int stack_push(STACK *handle, void *data)
 
 void *stack_pop(STACK *handle)
 {
-	void *data = NULL;
-
 	if (stack_is_empty(handle)) {
 		printf("error: stack_pop stack empty");
 		return NULL;
 	}
 
-	data = malloc(handle->size);
-	ERRP(NULL == data, stack_pop data malloc, goto ERR1);
-
 	handle->top--;
-	memcpy(data, handle->data + handle->size * handle->top, handle->size);
+	memcpy(handle->save, handle->data + handle->size * handle->top, handle->size);
 	memset(handle->data + handle->size * handle->top, 0, handle->size);
 
-	return data;
-ERR1:
-	return NULL;
+	return handle->save;
 }
 
 void stack_travel(STACK *handle, stack_op_t *operation)

@@ -21,6 +21,7 @@ typedef struct stack_t {
 	int size;
 	int max;
 	int top;
+	void *save;
 } STACK;
 
 typedef void stack_op_t(void *);

@@ -35,10 +35,13 @@ int main(void)
 	for (i = 0; i < STACK_MAX; i++) {
 		data = stack_pop(handle);
 		print(data);
+		free(data);
+		data = NULL;
 	}
 	printf("\n");
 
 	stack_travel(handle, print);
+	stack_destory(handle);
 
 	return 0;
 ERR1:

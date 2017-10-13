@@ -34,6 +34,7 @@ int main(void)
 	printf("\n");
 
 	queue_travel(handle, print);
+	queue_destory(handle);
 
 	return 0;
 

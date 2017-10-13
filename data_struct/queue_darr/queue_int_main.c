@@ -30,10 +30,13 @@ int main(void)
 	for (i = 0; i < QUEUE_MAX - 1; i++) {
 		data = dequeue(handle);
 		print(data);
+		free(data);
+		data = NULL;
 	}
 	printf("\n");
 
 	queue_travel(handle, print);
+	queue_destory(handle);
 
 	return 0;
 

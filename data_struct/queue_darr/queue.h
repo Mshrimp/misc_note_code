@@ -23,6 +23,7 @@ typedef struct queue_t {
 	int max;
 	int front;
 	int end;
+	void *save;
 } QUEUE;
 
 typedef void(queue_op_t)(void *);

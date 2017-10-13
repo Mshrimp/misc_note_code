@@ -14,12 +14,18 @@ QUEUE *queue_create(int data_size, int queue_max)
 	handle->data = malloc(data_size * queue_max);
 	ERRP(NULL == handle->data, queue_create handle->data malloc, goto ERR2);
 
+	handle->save = malloc(data_size);
+	ERRP(NULL == handle->save, queue_create handle->save malloc, goto ERR3);
+
 	handle->size = data_size;
 	handle->max = queue_max;
 	handle->front = 0;
 	handle->end = 0;
 
 	return handle;
+ERR3:
+	free(handle->data);
+	handle->data = NULL;
 ERR2:
 	free(handle);
 	handle = NULL;
@@ -84,17 +90,12 @@ int enqueue(QUEUE *handle, void *data)
 
 void *dequeue(QUEUE *handle)
 {
-	void *data = NULL;
-
 	if (queue_is_empty(handle)) {
 		printf("error: queue is empty\n");
 		return NULL;
 	}
 
-	data = malloc(handle->size);
-	ERRP(NULL == data, dequeue data malloc, goto ERR1);
-
-	memcpy(data, handle->data + handle->size * handle->end, handle->size);
+	memcpy(handle->save, handle->data + handle->size * handle->end, handle->size);
 	memset(handle->data + handle->size * handle->end, 0, handle->size);
 	handle->end++;
 
@@ -102,9 +103,7 @@ void *dequeue(QUEUE *handle)
 		handle->end = 0;
 	}
 
-	return data;
-ERR1:
-	return NULL;
+	return handle->save;
 }
 
 void queue_travel(QUEUE *handle, queue_op_t *operation)
