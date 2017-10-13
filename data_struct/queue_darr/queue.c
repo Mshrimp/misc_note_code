@@ -1,3 +1,6 @@
+/********************************************
+ 	用顺序表封装队列函数
+ ********************************************/
 #include "queue.h"
 
 
@@ -8,7 +11,7 @@ QUEUE *queue_create(int data_size, int queue_max)
 	handle = (QUEUE *)malloc(sizeof(QUEUE));
 	ERRP(NULL == handle, queue_create handle malloc, goto ERR1);
 
-	handle->data = malloc(data_size, queue_max);
+	handle->data = malloc(data_size * queue_max);
 	ERRP(NULL == handle->data, queue_create handle->data malloc, goto ERR2);
 
 	handle->size = data_size;
@@ -39,7 +42,7 @@ void queue_clear(QUEUE *handle)
 
 int queue_num(QUEUE *handle)
 {
-	if (handle->front > handle->end) {
+	if (handle->front >= handle->end) {
 		return handle->front - handle->end;
 	} else {
 		return handle->max - (handle->end - handle->front);
@@ -83,7 +86,65 @@ void *dequeue(QUEUE *handle)
 {
 	void *data = NULL;
 
-	data = handle->data + handle->size * handle->end;
+	if (queue_is_empty(handle)) {
+		printf("error: queue is empty\n");
+		return NULL;
+	}
 
+	data = malloc(handle->size);
+	ERRP(NULL == data, dequeue data malloc, goto ERR1);
+
+	memcpy(data, handle->data + handle->size * handle->end, handle->size);
+	memset(handle->data + handle->size * handle->end, 0, handle->size);
+	handle->end++;
+
+	if (handle->end == handle->max) {
+		handle->end = 0;
+	}
+
+	return data;
+ERR1:
+	return NULL;
+}
+
+void queue_travel(QUEUE *handle, queue_op_t *operation)
+{
+	int i = 0, j = 0;
+
+	for (i = handle->end, j = 0; j < queue_num(handle); i++, j++) {
+		if (i == handle->max) {
+			i = 0;
+		}
+		operation(handle->data + handle->size * i);
+	}
+	printf("\n");
+}
+
+int queue_resize(QUEUE *handle, int new_size)
+{
+	void *new_data = NULL;
+
+	if (queue_num(handle) > new_size) {
+		printf("error: queue_resize queue_num > new_size");
+		return -1;
+	}
+
+	new_data = malloc(handle->size * new_size);
+	ERRP(NULL == new_data, queue_resize new_data malloc, goto ERR1);
+
+	if (handle->front > handle->end) {
+		memcpy(new_data, handle->data + handle->size * handle->end, handle->size * queue_num(handle));
+	} else {
+		memcpy(new_data, handle->data + handle->size * handle->end, handle->size * (handle->max - handle->end));
+		memcpy(new_data + handle->size * (handle->max - handle->end), handle->data, handle->size * handle->front);
+	}
+
+	free(handle->data);
+	handle->data = new_data;
+	handle->max = new_size;
+
+	return 0;
+ERR1:
+	return -1;
 }
 
