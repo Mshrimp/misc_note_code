@@ -34,16 +34,16 @@ int is_queue_empty(int front, int end)
 
 int is_queue_full(int front, int end)
 {
-	if ((end + 1) % QUEUE_MAX == front) {
+	if ((front + 1) % QUEUE_MAX == end) {
 		return 1;
 	}
 	return 0;
 }
 
-void enqueue(int *queue, int *front, int end, int data)
+int enqueue(int *queue, int *front, int end, int data)
 {
 	if (is_queue_full(*front, end)) {
-		return;
+		return -1;
 	}
 	*(queue + *front) = data;
 	(*front)++;
@@ -51,6 +51,7 @@ void enqueue(int *queue, int *front, int end, int data)
 	if (*front == QUEUE_MAX) {
 		*front = 0;
 	}
+	return 0;
 }
 
 int dequeue(int *queue, int front, int *end)
@@ -77,20 +78,29 @@ int main(void)
 	int end = 0;
 	int data = 0;
 	int i = 0;
+	int num = 0;
 
 	for (i = 0; i < QUEUE_MAX; i++) {
 		data = rand() % 100;
 		printf("%d  ", data);
-		enqueue(queue, &front, end, data);
+		if (enqueue(queue, &front, end, data) < 0) {
+			printf("enqueue error, data = %d\n", data);
+		}
 	}
 	printf("\n");
 
+	num = queue_num(front, end);
 	queue_travel(queue, front, end);
 
-	for (i = 0; i < queue_num(front, end); i++) {
+	for (i = 0; i < num; i++) {
 		data = dequeue(queue, front, &end);
-		printf("%d  ", data);
+		if (data < 0) {
+			printf("空  ");
+		} else {
+			printf("%d  ", data);
+		}
 	}
+	printf("\n");
 
 	return 0;
 }
