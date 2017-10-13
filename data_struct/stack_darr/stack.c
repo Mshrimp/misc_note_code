@@ -1,3 +1,8 @@
+/*********************************************
+ 	用顺序表封装栈函数
+ *********************************************/
+
+
 #include "stack.h"
 
 
@@ -108,8 +113,8 @@ void *stack_pop(STACK *handle)
 	ERRP(NULL == data, stack_pop data malloc, goto ERR1);
 
 	handle->top--;
-	memcpy(data, handle->data + handle->top, handle->size);
-	memset(handle->data + handle->top, 0, handle->size);
+	memcpy(data, handle->data + handle->size * handle->top, handle->size);
+	memset(handle->data + handle->size * handle->top, 0, handle->size);
 
 	return data;
 ERR1:
