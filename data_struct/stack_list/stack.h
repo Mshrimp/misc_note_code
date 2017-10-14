@@ -26,6 +26,7 @@ struct node_t {
 typedef struct stack_t {
 	struct node_t head;
 	int size;
+	int max;
 	int top;
 	void *save;
 } STACK_LIST;
@@ -37,6 +38,7 @@ STACK_LIST *stack_create(int data_size, int stack_max);	//初始化栈
 void stack_destory(STACK_LIST *handle);	//销毁栈
 int stack_num(STACK_LIST *handle);	//栈长度
 int stack_is_empty(STACK_LIST *handle);	//判断栈是否为空栈
+int stack_is_full(STACK_LIST *handle);	//判断栈是否为满栈
 void stack_clear(STACK_LIST *handle);	//清空栈
 int stack_push(STACK_LIST *handle, void *data);	//压栈
 void *stack_pop(STACK_LIST *handle);	//出栈

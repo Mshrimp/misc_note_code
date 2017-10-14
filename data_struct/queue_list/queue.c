@@ -1,19 +1,19 @@
-#include "stack.h"
+#include "queue.h"
 
 
-STACK_LIST *stack_create(int data_size, int stack_max)
+QUEUE_LIST *queue_create(int data_size, int queue_max)
 {
-	STACK_LIST *handle = NULL;
+	QUEUE_LIST *handle = NULL;
 
-	handle = (STACK_LIST *)malloc(sizeof(STACK_LIST));
-	ERRP(NULL == handle, stack_create handle malloc, goto ERR1);
+	handle = (QUEUE_LIST *)malloc(sizeof(QUEUE_LIST));
+	ERRP(NULL == handle, queue_create handle malloc, goto ERR1);
 
 	handle->save = malloc(data_size);
-	ERRP(NULL == handle->save, stack_create handle->save malloc, goto ERR2);
+	ERRP(NULL == handle->save, queue_create handle->save malloc, goto ERR2);
 
 	handle->size = data_size;
-	handle->max = stack_max;
-	handle->top = 0;
+	handle->max = queue_max;
+	handle->count = 0;
 
 	handle->head.data = NULL;
 	handle->head.next = &handle->head;
@@ -27,7 +27,7 @@ ERR1:
 	return NULL;
 }
 
-void stack_destory(STACK_LIST *handle)
+void queue_destory(QUEUE_LIST *handle)
 {
 	struct node_t *tail = NULL;
 	
@@ -43,28 +43,28 @@ void stack_destory(STACK_LIST *handle)
 	handle = NULL;
 }
 
-int stack_num(STACK_LIST *handle)
+int queue_num(QUEUE_LIST *handle)
 {
-	return handle->top;
+	return handle->count;
 }
 
-int stack_is_empty(STACK_LIST *handle)
+int queue_is_empty(QUEUE_LIST *handle)
 {
-	if (0 == handle->top) {
+	if (0 == handle->count) {
 		return 1;
 	}
 	return 0;
 }
 
-int stack_is_full(STACK_LIST *handle)
+int queue_is_full(QUEUE_LIST *handle)
 {
-	if (handle->top == handle->max) {
+	if (handle->count == handle->max) {
 		return 1;
 	}
 	return 0;
 }
 
-void stack_clear(STACK_LIST *handle)
+void queue_clear(QUEUE_LIST *handle)
 {
 	struct node_t *tail = NULL;
 
@@ -81,20 +81,20 @@ void stack_clear(STACK_LIST *handle)
 	handle->head.next = &handle->head;
 }
 
-int stack_push(STACK_LIST *handle, void *data)
+int enqueue(QUEUE_LIST *handle, void *data)
 {
 	struct node_t *new_node = NULL;
 
 	if (NULL == data) {
-		printf("error: stack_push data null\n");
+		printf("error: queue_push data null\n");
 		return -1;
 	}
 
 	new_node = (struct node_t *)malloc(sizeof(struct node_t));
-	ERRP(NULL == new_node, stack_push new_node malloc, goto ERR1);
+	ERRP(NULL == new_node, queue_push new_node malloc, goto ERR1);
 
 	new_node->data = malloc(handle->size);
-	ERRP(NULL == new_node->data, stack_push new_node->data malloc, goto ERR2);
+	ERRP(NULL == new_node->data, queue_push new_node->data malloc, goto ERR2);
 
 	memcpy(new_node->data, data, handle->size);
 
@@ -103,7 +103,7 @@ int stack_push(STACK_LIST *handle, void *data)
 	handle->head.next->prev = new_node;
 	handle->head.next = new_node;
 
-	handle->top++;
+	handle->count++;
 
 	return 0;
 ERR2:
@@ -113,21 +113,21 @@ ERR1:
 	return -1;
 }
 
-void *stack_pop(STACK_LIST *handle)
+void *dequeue(QUEUE_LIST *handle)
 {
 	struct node_t *tail = NULL;
 
-	if (stack_is_empty(handle)) {
-		printf("error: stack_pop empty\n");
+	if (queue_is_empty(handle)) {
+		printf("error: queue_pop empty\n");
 		return NULL;
 	}
 
-	memcpy(handle->save, handle->head.next->data, handle->size);
+	memcpy(handle->save, handle->head.prev->data, handle->size);
 
-	tail = handle->head.next;
-	tail->next->prev = &handle->head;
-	handle->head.next = tail->next;
-	handle->top--;
+	tail = handle->head.prev;
+	tail->prev->next = &handle->head;
+	handle->head.prev = tail->prev;
+	handle->count--;
 
 	free(tail->data);
 	tail->data = NULL;
@@ -137,7 +137,7 @@ void *stack_pop(STACK_LIST *handle)
 	return handle->save;
 }
 
-void stack_travel(STACK_LIST *handle, stack_op_t *operation)
+void queue_travel(QUEUE_LIST *handle, queue_op_t *operation)
 {
 	struct node_t *tail = NULL;
 

@@ -1,5 +1,5 @@
 
-#include "stack.h"
+#include "queue.h"
 
 void print(void *data)
 {
@@ -12,25 +12,25 @@ void print(void *data)
 
 int main(void)
 {
-	STACK_LIST *handle = NULL;
+	QUEUE_LIST *handle = NULL;
 	int *data = NULL;
 	int num = 0;
 	int i = 0;
 
-	handle = stack_create(sizeof(int), STACK_MAX);
-	ERRP(NULL == handle, main handle stack_create, goto ERR1);
+	handle = queue_create(sizeof(int), QUEUE_MAX);
+	ERRP(NULL == handle, main handle queue_create, goto ERR1);
 
-	for (i = 0; i < STACK_MAX; i++) {
+	for (i = 0; i < QUEUE_MAX; i++) {
 		num = rand() % 100;
 		printf("%d  ", num);
-		stack_push(handle, &num);
+		enqueue(handle, &num);
 	}
 	printf("\n");
 
-	stack_travel(handle, print);
+	queue_travel(handle, print);
 
-	for (i = 0; i < STACK_MAX; i++) {
-		data = stack_pop(handle);
+	for (i = 0; i < QUEUE_MAX; i++) {
+		data = dequeue(handle);
 		printf("%d  ", *data);
 	}
 	printf("\n");
