@@ -25,7 +25,7 @@ int main(void)
 
 	arr_travel(data, SORT_MAX);
 
-	sort_1(data, SORT_MAX);
+	sort_(data, SORT_MAX);
 
 	arr_travel(data, SORT_MAX);
 
