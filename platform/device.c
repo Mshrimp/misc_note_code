@@ -3,7 +3,7 @@
 #include <linux/platform_device.h>
 #include <linux/ioport.h>
 
-static struct resource test_release[] = {
+static struct resource test_recource[2] = {
 	[0] = {
 		
 	},
@@ -19,8 +19,8 @@ static struct platform_device test_device = {
 	.name = "test_platform",
 	.id = -1,
 	.dev.release = test_release,
-	.num_resource = ARRAY_SIZE(test_resource),
-	.resource = test_resource,
+	.num_resources = ARRAY_SIZE(test_recource),
+	.resource = test_recource,
 };
 
 static int test_init(void)
