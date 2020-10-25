@@ -4,7 +4,7 @@
 #include <errno.h>
 
 
-#define SYMBOL_ELF_FILE	"main.sym"
+#define SYMBOL_ELF_FILE	"debug.sym"
 #define SYMBOL_C_SOURCE	"symbol.c"
 
 #define BUF_SIZE		(256)
@@ -134,7 +134,7 @@ int get_struct_func_from_buf(unsigned char *buf, int len)
 	//printf("%s, cmd: %s\n", __func__, cmd);
 
 	memset(symbol_buf, 0, SYMBOL_SIZE);
-	sprintf(symbol_buf, "    {\"%s\", &(char *)%s()},\n", cmd, cmd);
+	sprintf(symbol_buf, "    {\"%s\", (char *)&%s},\n", cmd, cmd);
 	func_len = strlen(symbol_buf);
 	//printf("%s, symbol_buf: %s, len: %d\n", __func__, symbol_buf, func_len);
 
@@ -225,6 +225,7 @@ int symbol_struct_func_proc(void)
 {
 	unsigned char *p = NULL;
 	int len = 0;
+	int cnt = 0;
 	int ret = -1;
 
 	if (!in_fp) {
@@ -260,9 +261,18 @@ int symbol_struct_func_proc(void)
 			printf("%s, symbol_proc failed, ret: %d\n", __func__, ret);
 			return -2;
 		}
+		cnt++;
 	}
 
 	format_symbol_to_file("};\n");
+	memset(symbol_buf, 0, SYMBOL_SIZE);
+	sprintf(symbol_buf, "int symbol_cnt = %d;\n", cnt);
+	len = strlen(symbol_buf);
+	ret = symbol_write_to_file(symbol_buf, len);
+	if (ret < 0) {
+		printf("%s, symbol_write_to_file failed, ret: %d\n", __func__, ret);
+		return ret;
+	}
 
 	fclose(in_fp);
 	in_fp = NULL;

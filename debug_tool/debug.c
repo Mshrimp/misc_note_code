@@ -3,27 +3,15 @@
 #include <string.h>
 #include <unistd.h>
 
-int test_1(int ind)
-{
-	printf("%s, ind: %d\n", __func__, ind);
-
-	return 0;
-}
-
-int test_2(int ind)
-{
-	printf("%s, ind: %d\n", __func__, ind);
-
-	return 0;
-}
-
 typedef struct symbol {
-	unsigned long long addr;
-	unsigned char status;
-	unsigned char name[32];
+	unsigned char *name;
+	unsigned char *addr;
 } symbol_t;
 
-typedef int (*sym_func_t)(void);
+extern symbol_t symbol_tbl[];
+extern int symbol_cnt;
+
+typedef int (*sym_func_t)(int);
 
 int symbol_parse(unsigned char *str, symbol_t *sym)
 {
@@ -49,15 +37,13 @@ int symbol_parse(unsigned char *str, symbol_t *sym)
 		p = strtok(NULL, &gap);
 	}
 	printf("addr: %s\n", addr);
-	printf("status: %c\n", status);
 	printf("name: %s\n", name);
 
-	sym->addr = strtoull(addr, NULL, 16);
-	sym->status = status;
-	memcpy(sym->name, name, strlen(name) + 1);
+	sym->name = (unsigned char *)name;
+	sym->addr = (unsigned char *)strtoull(addr, NULL, 16);
+	//memcpy(sym->name, name, strlen(name) + 1);
 
-	printf("sym->addr: 0x%016llx\n", sym->addr);
-	printf("sym->status: %c\n", sym->status);
+	printf("sym->addr: %p\n", sym->addr);
 	printf("sym->name: %s\n", sym->name);
 	printf("OK!\n");
 
@@ -65,7 +51,8 @@ int symbol_parse(unsigned char *str, symbol_t *sym)
 }
 
 #define SYMBOL_LEN		(64)
-#define SYMBOL_FILE		("main.sym")
+#define SYMBOL_FILE		("debug.sym")
+#if 0
 int check_symbol(unsigned char *cmd, symbol_t *symbol)
 {
 	unsigned char symbol_line[SYMBOL_LEN] = {0};
@@ -95,17 +82,45 @@ int check_symbol(unsigned char *cmd, symbol_t *symbol)
 
 	return 0;
 }
+#endif
+
+int check_symbol(unsigned char *cmd, symbol_t *symbol)
+{
+	int cnt = 0;
+	int i = 0;
+
+	//cnt = sizeof(symbol_tbl) / sizeof(symbol_tbl[0]);
+	cnt = symbol_cnt;
+	//printf("%s, cnt: %d\n", __func__, cnt);
+
+	for (i = 0; i < cnt; i++) {
+		if (!memcmp(cmd, symbol_tbl[i].name, strlen(cmd))) {
+			//printf("%s, i: %d, %s\n", __func__, i, symbol_tbl[i].name);
+			break;
+		}
+	}
+
+	if (i == cnt) {
+		printf("%s, i: %d, cnt: %d, no found func in symbol_tbl!\n", __func__, i, cnt);
+		return -1;
+	}
+
+	symbol->name = symbol_tbl[i].name;
+	symbol->addr = symbol_tbl[i].addr;
+
+	return 0;
+}
 
 int run_symbol_func(symbol_t *symbol)
 {
 	sym_func_t sym_func;
 
-	printf("%s, %d\n", __func__, __LINE__);
+	//printf("%s, %d\n", __func__, __LINE__);
 	sym_func = (sym_func_t *)symbol->addr;
-	printf("%s, %d\n", __func__, __LINE__);
+	//printf("%s, %d\n", __func__, __LINE__);
 
-	sym_func();
-	printf("%s, %d\n", __func__, __LINE__);
+	sym_func(1);
+	//printf("%s, %d\n", __func__, __LINE__);
 
 	return 0;
 }
@@ -117,7 +132,7 @@ int cmd_process(unsigned char *cmd)
 	memset(&symbol, 0, sizeof(symbol_t));
 	check_symbol(cmd, &symbol);
 
-	printf("%s, %d\n", __func__, __LINE__);
+	//printf("%s, %d\n", __func__, __LINE__);
 	run_symbol_func(&symbol);
 
 	return 0;
@@ -129,9 +144,6 @@ int main(void)
 {
 	printf("Hello world!\n");
 
-	test_1(1);
-	test_2(2);
-
 	//check_symbol(cmd);
 
 	while (1) {
@@ -142,6 +154,9 @@ int main(void)
 		if (!(memcmp("quit", cmd, 4)) || !(memcmp("exit", cmd, 4))) {
 			printf("quit debug process!\n");
 			break;
+		}
+		if (!(memcmp(cmd, "\n", 2))) {
+			continue;
 		}
 		cmd_process(cmd);
 	}
