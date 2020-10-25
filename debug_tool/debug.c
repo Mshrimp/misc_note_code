@@ -11,7 +11,10 @@ typedef struct symbol {
 extern symbol_t symbol_tbl[];
 extern int symbol_cnt;
 
-typedef int (*sym_func_t)(int);
+typedef int (*sym_func_t)(int, int, int, int);
+
+#define DEBUG_ARGC_MAX	(4)
+int args[DEBUG_ARGC_MAX] = {0};
 
 int symbol_parse(unsigned char *str, symbol_t *sym)
 {
@@ -89,37 +92,96 @@ int check_symbol(unsigned char *cmd, symbol_t *symbol)
 	int cnt = 0;
 	int i = 0;
 
-	//cnt = sizeof(symbol_tbl) / sizeof(symbol_tbl[0]);
 	cnt = symbol_cnt;
-	//printf("%s, cnt: %d\n", __func__, cnt);
-
 	for (i = 0; i < cnt; i++) {
-		if (!memcmp(cmd, symbol_tbl[i].name, strlen(cmd))) {
+		if (!memcmp(cmd, symbol_tbl[i].name, strlen(symbol_tbl[i].name))) {
 			//printf("%s, i: %d, %s\n", __func__, i, symbol_tbl[i].name);
 			break;
 		}
 	}
 
 	if (i == cnt) {
-		printf("%s, i: %d, cnt: %d, no found func in symbol_tbl!\n", __func__, i, cnt);
+		//printf("%s, i: %d, cnt: %d, no found func in symbol_tbl!\n", __func__, i, cnt);
 		return -1;
 	}
 
 	symbol->name = symbol_tbl[i].name;
 	symbol->addr = symbol_tbl[i].addr;
+	printf("function: %s\n", symbol->name);
 
 	return 0;
 }
 
-int run_symbol_func(symbol_t *symbol)
+int check_args(unsigned char *cmd, int *args)
+{
+	unsigned char arg[16] = {0};
+	unsigned char *p_prev = NULL;
+	unsigned char *p_next = NULL;
+	int len = 0;
+	int cnt = 0;
+	int end = 0;
+	int i = 0;
+
+	p_prev = cmd;
+
+	while (*p_prev == ' ') {
+		p_prev++;
+	}
+
+	while ((!end) && (*p_prev != '\0')) {
+		while (*p_prev == ' ') {
+			p_prev++;
+		}
+
+		p_next = strchr(p_prev, ' ');
+
+		memset(arg, 0, 16);
+		if (p_next) {
+			len = p_next - p_prev;
+			memcpy(arg, p_prev, len);
+		} else {
+			len = strlen(p_prev);
+			memcpy(arg, p_prev, len);
+			end = 1;
+		}
+
+		//printf("%s, arg: %s\n", __func__, arg);
+
+		args[cnt] = strtol(arg, NULL, 10);
+		//printf("%s, args[%d]: %d\n", __func__, cnt, args[cnt]);
+
+		cnt++;
+
+		p_prev = p_next;
+		p_next = NULL;
+	}
+
+	
+	for (i = 0; i < cnt; i++) {
+		printf("args[%d]: %d\n", i, args[i]);
+	}
+
+	printf("arg cnt: %d\n", cnt);
+
+	return 0;
+}
+
+int run_symbol_func(symbol_t *symbol, int *args)
 {
 	sym_func_t sym_func;
+	int ret = -1;
 
 	//printf("%s, %d\n", __func__, __LINE__);
-	sym_func = (sym_func_t *)symbol->addr;
+	//sym_func = (sym_func_t *)symbol->addr;
+	ret = ((sym_func_t)(symbol->addr))(args[0], args[1], args[2], args[3]);
 	//printf("%s, %d\n", __func__, __LINE__);
+	if (ret < 0) {
+		printf("%s run failed, ret: %d\n", symbol->name, ret);
+	} else {
+		printf("Done, return: %d\n", ret);
+	}
 
-	sym_func(1);
+	//sym_func(1);
 	//printf("%s, %d\n", __func__, __LINE__);
 
 	return 0;
@@ -128,12 +190,18 @@ int run_symbol_func(symbol_t *symbol)
 int cmd_process(unsigned char *cmd)
 {
 	symbol_t symbol;
+	int ret = -1;
 
 	memset(&symbol, 0, sizeof(symbol_t));
-	check_symbol(cmd, &symbol);
+	ret = check_symbol(cmd, &symbol);
+	if (ret < 0) {
+		printf("%s, check_symbol failed, ret: %d\n", __func__, ret);
+		return ret;
+	}
+	cmd += strlen(symbol.name);
+	check_args(cmd, args);
 
-	//printf("%s, %d\n", __func__, __LINE__);
-	run_symbol_func(&symbol);
+	run_symbol_func(&symbol, args);
 
 	return 0;
 }
@@ -142,24 +210,43 @@ int cmd_process(unsigned char *cmd)
 unsigned char cmd[CMD_LEN] = {0};
 int main(void)
 {
-	printf("Hello world!\n");
-
-	//check_symbol(cmd);
+	unsigned char *p = NULL;
+	int ret = -1;
 
 	while (1) {
 		printf("Debug->");
 		memset(cmd, 0, CMD_LEN);
-		scanf("%s", cmd);
-		printf("cmd: %s\n", cmd);
+		scanf("%[^\n]", cmd);
+		//printf("%s, cmd: %s\n", __func__, cmd);
+		getchar();
+		//fflush(stdin);
 		if (!(memcmp("quit", cmd, 4)) || !(memcmp("exit", cmd, 4))) {
 			printf("quit debug process!\n");
 			break;
 		}
-		if (!(memcmp(cmd, "\n", 2))) {
+		if (cmd[0] == '\0') {
 			continue;
 		}
-		cmd_process(cmd);
+
+		if (!(memcmp(cmd, "\n", 1))) {
+			continue;
+		}
+
+		p = cmd;
+		while ((*p != '\0') && ((*p < 'A') || (*p > 'z'))) {
+			p++;
+		}
+		if (*p =='\0') {
+			continue;
+		}
+
+		ret = cmd_process(p);
+		if (ret < 0) {
+			printf("%s, cmd_process failed, ret: %d\n", __func__, ret);
+			continue;
+		}
 	}
 
 	return 0;
 }
+
